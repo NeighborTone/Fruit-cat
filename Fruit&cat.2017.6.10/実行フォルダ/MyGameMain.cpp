@@ -1,184 +1,184 @@
 #include "MyGameMain.h"
 #include "MyPG.h"
-#include "windows.h"				//PlaySound‚ğg‚¦‚é‚æ‚¤‚É‚·‚é
+#include "windows.h"				//PlaySoundã‚’ä½¿ãˆã‚‹ã‚ˆã†ã«ã™ã‚‹
 #include "mmsystem.h"
 #pragma comment(lib,"winmm.lib")
 #include <dsound.h>
 
 
-// ---‰æ‘œî•ñ---
+// ---ç”»åƒæƒ…å ±---
 const ML::Box2D SRC_APPLE(0, 0, 32, 32);
 const ML::Box2D SRC_LEMON(32, 0, 32, 32);
 const ML::Box2D SRC_MELON(0, 32, 32, 32);
 const ML::Box2D SRC_PEACH(32, 32, 32, 32);
-//•
+//é»’
 const ML::Box2D SRC_BAPPLE(0, 0, 32, 32);
 const ML::Box2D SRC_BLEMON(32, 0, 32, 32);
 const ML::Box2D SRC_BMELON(0, 32, 32, 32);
 const ML::Box2D SRC_BPEACH(32, 32, 32, 32);
-//”wŒi
+//èƒŒæ™¯
 const ML::Box2D SRC_BACK(0, 0, 1600, 1062);
-//--‚ ‚ç‚©‚¶‚ßî•ñ‚ğ—pˆÓ‚µ‚¨‚­--
+//--ã‚ã‚‰ã‹ã˜ã‚æƒ…å ±ã‚’ç”¨æ„ã—ãŠã--
 
 
-//ƒQ[ƒ€î•ñ
-DI::Mouse		mouse;		//ƒ}ƒEƒX‚Ì“ü—Í‚ğ“¾‚é
-int				 posX;		//ƒ}ƒEƒXÀ•W
+//ã‚²ãƒ¼ãƒ æƒ…å ±
+DI::Mouse		mouse;		//ãƒã‚¦ã‚¹ã®å…¥åŠ›ã‚’å¾—ã‚‹
+int				 posX;		//ãƒã‚¦ã‚¹åº§æ¨™
 int				 posY;		//---------
-int				score;		//“¾“_
-int				pause;		//•\¦ŠÔ
-int				erai;		//•\¦ŠÔ
+int				score;		//å¾—ç‚¹
+int				pause;		//è¡¨ç¤ºæ™‚é–“
+int				erai;		//è¡¨ç¤ºæ™‚é–“
 
-enum State		//‰Ê•¨‚Ìó‘Ô
+enum State		//æœç‰©ã®çŠ¶æ…‹
 {
-	OFF,		//ƒNƒŠƒbƒN‚³‚ê‚Ä‚¢‚È‚¢‚Æ‚«
-	ON			//¶ƒNƒŠƒbƒN‚³‚ê‚Ä‚¢‚é‚Æ‚«
+	OFF,		//ã‚¯ãƒªãƒƒã‚¯ã•ã‚Œã¦ã„ãªã„ã¨ã
+	ON			//å·¦ã‚¯ãƒªãƒƒã‚¯ã•ã‚Œã¦ã„ã‚‹ã¨ã
 	
 };
-enum nekostate	//”L‚Ìó‘Ô
+enum nekostate	//çŒ«ã®çŠ¶æ…‹
 {
-	Normal,		//’Êí
-	nyaa,		//‰Ê•¨i³‰ğj
-	bad			//‰Ê•¨i•s³‰ğj
+	Normal,		//é€šå¸¸
+	nyaa,		//æœç‰©ï¼ˆæ­£è§£ï¼‰
+	bad			//æœç‰©ï¼ˆä¸æ­£è§£ï¼‰
 
 };
 
 struct back
 {
-	ML::Box2D BACK;		//”wŒi‚Ì•\¦
+	ML::Box2D BACK;		//èƒŒæ™¯ã®è¡¨ç¤º
 };
 back bc;
 
 struct  Blackfruit
 {
-	ML::Box2D	draw;	//‰Ê•¨‚Ì•\¦
+	ML::Box2D	draw;	//æœç‰©ã®è¡¨ç¤º
 	
 };
 
 struct  fruit
 {
-	State		state;	//‰Ê•¨‚Ìó‘Ô
-	ML::Box2D	hit;	//‰Ê•¨‚Ì‚ ‚½‚è”»’è
+	State		state;	//æœç‰©ã®çŠ¶æ…‹
+	ML::Box2D	hit;	//æœç‰©ã®ã‚ãŸã‚Šåˆ¤å®š
 };
 
 struct Neko
 {
-	nekostate		state;		//”L‚Ìó‘Ô
-	ML::Box2D		HIT;		//”L‚Ì‚ ‚½‚è”»’è
+	nekostate		state;		//çŒ«ã®çŠ¶æ…‹
+	ML::Box2D		HIT;		//çŒ«ã®ã‚ãŸã‚Šåˆ¤å®š
 };
 Neko	neko;
-//‰Ê•¨‚Ì•Ï”
-fruit		fruits[4];		//‰Ê•¨‚ÌŒÂ”4ŒÂ
-Blackfruit	Bfruits[4];		//•‚¢‰Ê•¨‚ÌŒÂ”4ŒÂ
-bool	wait = false;	//‰Ê•¨‚Ìd‚È‚è‚Ì—LŒøA–³Œø”»’è
-bool	check = false;	//³‰ğ‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN
-int				ran;	//ƒ‰ƒ“ƒ_ƒ€‚È’l‚ğ“ü‚ê‚é
+//æœç‰©ã®å¤‰æ•°
+fruit		fruits[4];		//æœç‰©ã®å€‹æ•°4å€‹
+Blackfruit	Bfruits[4];		//é»’ã„æœç‰©ã®å€‹æ•°4å€‹
+bool	wait = false;	//æœç‰©ã®é‡ãªã‚Šã®æœ‰åŠ¹ã€ç„¡åŠ¹åˆ¤å®š
+bool	check = false;	//æ­£è§£ã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯
+int				ran;	//ãƒ©ãƒ³ãƒ€ãƒ ãªå€¤ã‚’å…¥ã‚Œã‚‹
 
 //-----------------------------------------------------------------------------
-//‰Šú‰»ˆ—
-//‹@”\ŠT—vFƒvƒƒOƒ‰ƒ€‹N“®‚É‚P‰ñÀs‚³‚ê‚éi‘fŞ‚È‚Ç‚Ì€”õ‚ğs‚¤j
+//åˆæœŸåŒ–å‡¦ç†
+//æ©Ÿèƒ½æ¦‚è¦ï¼šãƒ—ãƒ­ã‚°ãƒ©ãƒ èµ·å‹•æ™‚ã«ï¼‘å›å®Ÿè¡Œã•ã‚Œã‚‹ï¼ˆç´ æãªã©ã®æº–å‚™ã‚’è¡Œã†ï¼‰
 //-----------------------------------------------------------------------------
 void  MyGameMain_Initalize()
 {
-	PlaySound("./data/SE/ƒXƒ^[ƒg.wav", NULL, SND_FILENAME | SND_ASYNC);		//‚Í‚¢A‚æ[‚¢ƒXƒ^[ƒg
-	//•¶š‚Ì•\¦
-	DG::Font_Create("FontA", "MS ƒSƒVƒbƒN", 16, 32);
+	PlaySound("./data/SE/ã‚¹ã‚¿ãƒ¼ãƒˆ.wav", NULL, SND_FILENAME | SND_ASYNC);		//ã¯ã„ã€ã‚ˆãƒ¼ã„ã‚¹ã‚¿ãƒ¼ãƒˆ
+	//æ–‡å­—ã®è¡¨ç¤º
+	DG::Font_Create("FontA", "MS ã‚´ã‚·ãƒƒã‚¯", 16, 32);
 	score = 0;
 
-	//‰æ‘œ‚ğ“Ç‚İ‚Şˆ—
-	DG::Image_Create("back", "./data/image/Photoelly033_TP_V.jpg");	//”wŒi
-	DG::Image_Create("neko",   "./data/image/nekodot.png");	//”L1
-	DG::Image_Create("neko2", "./data/image/nekodot2.png");	//”L2
-	DG::Image_Create("neko3", "./data/image/nekodot3.png");	//”L2
-	DG::Image_Create("FRUITS", "./data/image/Fruits.png");	//‰Ê•¨
-	DG::Image_Create("FRUITS2", "./data/image/Fruits_neko.png");	//‰Ê•¨2”L—p
-	DG::Image_Create("m9(^„D^)Ìß·Ş¬°", "./data/image/m9(^„D^)Ìß·Ş¬°.png");	//ƒQ[ƒ€ƒI[ƒo[
-	DG::Image_Create("‚¦‚ç‚¢‚Á", "./data/image/‚¦‚ç‚¢‚Á.png");
-	DG::Image_Create("Š®", "./data/image/Š®.png");	//Š®
+	//ç”»åƒã‚’èª­ã¿è¾¼ã‚€å‡¦ç†
+	DG::Image_Create("back", "./data/image/Photoelly033_TP_V.jpg");	//èƒŒæ™¯
+	DG::Image_Create("neko",   "./data/image/nekodot.png");	//çŒ«1
+	DG::Image_Create("neko2", "./data/image/nekodot2.png");	//çŒ«2
+	DG::Image_Create("neko3", "./data/image/nekodot3.png");	//çŒ«2
+	DG::Image_Create("FRUITS", "./data/image/Fruits.png");	//æœç‰©
+	DG::Image_Create("FRUITS2", "./data/image/Fruits_neko.png");	//æœç‰©2çŒ«ç”¨
+	DG::Image_Create("m9(^Ğ”^)ï¾Œï¾Ÿï½·ï¾ï½¬ï½°", "./data/image/m9(^Ğ”^)ï¾Œï¾Ÿï½·ï¾ï½¬ï½°.png");	//ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼
+	DG::Image_Create("ãˆã‚‰ã„ã£", "./data/image/ãˆã‚‰ã„ã£.png");
+	DG::Image_Create("å®Œ", "./data/image/å®Œ.png");	//å®Œ
 
-	//—”•\‚Ì‘I‘ğ
+	//ä¹±æ•°è¡¨ã®é¸æŠ
 	srand((unsigned int)time(NULL));
 	ran = rand() % (3 + 1);
 	posX = 0;
 	posY = 0;
-	pause = 150;	//”L•\¦ŠÔ
-	erai = 300;		//5•b‚ÅŠ®
+	pause = 150;	//çŒ«è¡¨ç¤ºæ™‚é–“
+	erai = 300;		//5ç§’ã§å®Œ
 	
-	bc.BACK = ML::Box2D(0, 0, 480, 270);		//”wŒi‚Ì•\¦
+	bc.BACK = ML::Box2D(0, 0, 480, 270);		//èƒŒæ™¯ã®è¡¨ç¤º
 
-	neko.HIT = ML::Box2D(200, 50, 48, 48);		//”L‚Ì‹éŒ`
-	neko.state = Normal;						//”L‚Ì‰Šú‰»
+	neko.HIT = ML::Box2D(200, 50, 48, 48);		//çŒ«ã®çŸ©å½¢
+	neko.state = Normal;						//çŒ«ã®åˆæœŸåŒ–
 
 
 	for (int i = 0; i < 4; ++i)
 	{
-		fruits[i].hit = ML::Box2D(0 + (32 * i), 238, 32, 32);	//‰Ê•¨‚Ì‹éŒ`
-		fruits[i].state = OFF;		//‰Ê•¨‚Ì‰Šú‰»
+		fruits[i].hit = ML::Box2D(0 + (32 * i), 238, 32, 32);	//æœç‰©ã®çŸ©å½¢
+		fruits[i].state = OFF;		//æœç‰©ã®åˆæœŸåŒ–
 	}
 
 	for (int i = 0; i < 4; ++i)
 	{
-		Bfruits[i].draw = ML::Box2D(250, 20, 32, 32);	//•‚¢‰Ê•¨‚ÌÀ•Wƒf[ƒ^
+		Bfruits[i].draw = ML::Box2D(250, 20, 32, 32);	//é»’ã„æœç‰©ã®åº§æ¨™ãƒ‡ãƒ¼ã‚¿
 
 	}
 
 }
 //-----------------------------------------------------------------------------
-//‰ğ•úˆ—
-//‹@”\ŠT—vFƒvƒƒOƒ‰ƒ€I—¹‚É‚P‰ñÀs‚³‚ê‚éi‘fŞ‚È‚Ç‚Ì‰ğ•ú‚ğs‚¤j
+//è§£æ”¾å‡¦ç†
+//æ©Ÿèƒ½æ¦‚è¦ï¼šãƒ—ãƒ­ã‚°ãƒ©ãƒ çµ‚äº†æ™‚ã«ï¼‘å›å®Ÿè¡Œã•ã‚Œã‚‹ï¼ˆç´ æãªã©ã®è§£æ”¾ã‚’è¡Œã†ï¼‰
 //-----------------------------------------------------------------------------
 void  MyGameMain_Finalize()
 {
-	DG::Image_Erase("back");  //–¾¦“I‚É‰ğ•ú‚µ‚½‚¢ê‡
-	DG::Image_Erase("neko");  //–¾¦“I‚É‰ğ•ú‚µ‚½‚¢ê‡
-	DG::Image_Erase("neko2");  //–¾¦“I‚É‰ğ•ú‚µ‚½‚¢ê‡
-	DG::Image_Erase("neko3");  //–¾¦“I‚É‰ğ•ú‚µ‚½‚¢ê‡
-	DG::Image_Erase("FRUITS"); //–¾¦“I‚É‰ğ•ú‚µ‚½‚¢ê‡
-	DG::Image_Erase("FRUITS2"); //–¾¦“I‚É‰ğ•ú‚µ‚½‚¢ê‡
-	DG::Image_Erase("m9(^„D^)Ìß·Ş¬°");
-	DG::Image_Erase("‚¦‚ç‚¢‚Á");
-	DG::Image_Erase("Š®");
+	DG::Image_Erase("back");  //æ˜ç¤ºçš„ã«è§£æ”¾ã—ãŸã„å ´åˆ
+	DG::Image_Erase("neko");  //æ˜ç¤ºçš„ã«è§£æ”¾ã—ãŸã„å ´åˆ
+	DG::Image_Erase("neko2");  //æ˜ç¤ºçš„ã«è§£æ”¾ã—ãŸã„å ´åˆ
+	DG::Image_Erase("neko3");  //æ˜ç¤ºçš„ã«è§£æ”¾ã—ãŸã„å ´åˆ
+	DG::Image_Erase("FRUITS"); //æ˜ç¤ºçš„ã«è§£æ”¾ã—ãŸã„å ´åˆ
+	DG::Image_Erase("FRUITS2"); //æ˜ç¤ºçš„ã«è§£æ”¾ã—ãŸã„å ´åˆ
+	DG::Image_Erase("m9(^Ğ”^)ï¾Œï¾Ÿï½·ï¾ï½¬ï½°");
+	DG::Image_Erase("ãˆã‚‰ã„ã£");
+	DG::Image_Erase("å®Œ");
 	DG::Font_Erase("FontA");
 
 }
 //-----------------------------------------------------------------------------
-//XVˆ—
-//‹@”\ŠT—vFƒQ[ƒ€‚Ì‚PƒtƒŒ[ƒ€‚É“–‚½‚éˆ—
+//æ›´æ–°å‡¦ç†
+//æ©Ÿèƒ½æ¦‚è¦ï¼šã‚²ãƒ¼ãƒ ã®ï¼‘ãƒ•ãƒ¬ãƒ¼ãƒ ã«å½“ãŸã‚‹å‡¦ç†
 //-----------------------------------------------------------------------------
 void  MyGameMain_UpDate()
 {
 	mouse = DI::Mouse_GetState();
 
-	//ƒ}ƒEƒXƒJ[ƒ\ƒ‹‚ÌˆÊ’u‚ğposX,Y‚É‚»‚Ì‚Ü‚Ü‘ã“ü
+	//ãƒã‚¦ã‚¹ã‚«ãƒ¼ã‚½ãƒ«ã®ä½ç½®ã‚’posX,Yã«ãã®ã¾ã¾ä»£å…¥
 	posX = mouse.cursorPos.x - 16;
 	posY = mouse.cursorPos.y - 16;
-	//ƒ}ƒEƒXƒJ[ƒ\ƒ‹‚Æ‹éŒ`‚Ì”»’è
+	//ãƒã‚¦ã‚¹ã‚«ãƒ¼ã‚½ãƒ«ã¨çŸ©å½¢ã®åˆ¤å®š
 	ML::Box2D mousePos(posX, posY, 32, 32);
 	
 	
-	if (score == 5 || score == -5)		//ƒXƒRƒA‚ª5‚ª-5‚ÅƒQ[ƒ€I—¹
+	if (score == 5 || score == -5)		//ã‚¹ã‚³ã‚¢ãŒ5ãŒ-5ã§ã‚²ãƒ¼ãƒ çµ‚äº†
 	{
 		
 		for (int i = 0; i < 4; ++i)
 		{
 			
-			fruits[i].hit = ML::Box2D(0, 0, 0, 0);		//I—¹‚É‰Ê•¨‚ğÁ‹A
+			fruits[i].hit = ML::Box2D(0, 0, 0, 0);		//çµ‚äº†æ™‚ã«æœç‰©ã‚’æ¶ˆå»ã€
 		}
 	}
 		for (int i = 0; i < 4; ++i)
 		{
-			if (wait == false && mouse.LB.on && fruits[i].hit.Hit(mousePos))		//‚à‚µ‰Ê•¨‚Ì‹éŒ`‚Éd‚È‚èAƒ}ƒEƒX‚Ì¶ƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚Ä‚¢‚éŠÔ
+			if (wait == false && mouse.LB.on && fruits[i].hit.Hit(mousePos))		//ã‚‚ã—æœç‰©ã®çŸ©å½¢ã«é‡ãªã‚Šã€ãƒã‚¦ã‚¹ã®å·¦ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹é–“
 			{
-				fruits[i].state = ON;		//‰Ê•¨‚Ìó‘Ô‚ğON
-				wait = true;				//‰Ê•¨‚Ìó‘Ô‚ğ—LŒø
+				fruits[i].state = ON;		//æœç‰©ã®çŠ¶æ…‹ã‚’ON
+				wait = true;				//æœç‰©ã®çŠ¶æ…‹ã‚’æœ‰åŠ¹
 			}
 
-			if (fruits[i].state == ON)		//‰Ê•¨‚Ìó‘Ô‚ªON‚Ì
+			if (fruits[i].state == ON)		//æœç‰©ã®çŠ¶æ…‹ãŒONã®æ™‚
 			{
-				fruits[i].hit.x = posX;		//‰Ê•¨‚Ì‚ ‚½‚è”»’è‚ÌÀ•W‚Æƒ}ƒEƒX‚ÌÀ•W‚ğ“¯Šú
+				fruits[i].hit.x = posX;		//æœç‰©ã®ã‚ãŸã‚Šåˆ¤å®šã®åº§æ¨™ã¨ãƒã‚¦ã‚¹ã®åº§æ¨™ã‚’åŒæœŸ
 				fruits[i].hit.y = posY;		//---------------------------
 
-				//‰Ê•¨‚ÌŠG•¿‚ª³‰ğ‚©ŠÔˆá‚¢‚©B
+				//æœç‰©ã®çµµæŸ„ãŒæ­£è§£ã‹é–“é•ã„ã‹ã€‚
 				if (i == ran)
 				{
 					check = true;
@@ -187,56 +187,56 @@ void  MyGameMain_UpDate()
 				{
 					check = false;
 				}
-				//•‚¢‰Ê•¨‚Æ‚ ‚Á‚Ä‚¢‚é‚Æ‚«‚Ìˆ—
-				if (neko.state == Normal && neko.HIT.Hit(mousePos) && check == true)		//‰Ê•¨‚Ìó‘Ô‚ªON‚ÌA’Êíó‘Ô‚Ì”L‚É“–‚½‚éA‚©‚Â•‚¢‰Ê•¨‚Æ“¯‚¶
+				//é»’ã„æœç‰©ã¨ã‚ã£ã¦ã„ã‚‹ã¨ãã®å‡¦ç†
+				if (neko.state == Normal && neko.HIT.Hit(mousePos) && check == true)		//æœç‰©ã®çŠ¶æ…‹ãŒONã®æ™‚ã€é€šå¸¸çŠ¶æ…‹ã®çŒ«ã«å½“ãŸã‚‹ã€ã‹ã¤é»’ã„æœç‰©ã¨åŒã˜
 				{
-					neko.state = nyaa;			//”L‚Ìó‘Ô‚ğnyaa‚É‚·‚é
-					PlaySound("./data/SE/–ìbuFOOª‹C‚¿‚¢‚¢`v.wav", NULL, SND_FILENAME | SND_ASYNC);		//SE‚ğÄ¶
+					neko.state = nyaa;			//çŒ«ã®çŠ¶æ…‹ã‚’nyaaã«ã™ã‚‹
+					PlaySound("./data/SE/cat1.wav", NULL, SND_FILENAME | SND_ASYNC);		//SEã‚’å†ç”Ÿ
 					score += 1;
-					fruits[i].hit = ML::Box2D(0 + (40 * i), 238, 32, 32);		//Ä•\¦
-					wait = false;				//‰Ê•¨‚Ìó‘Ô‚ğ–³Œø
-					fruits[i].state = OFF;		//‰Ê•¨‚Ìó‘Ô‚ğOFF
+					fruits[i].hit = ML::Box2D(0 + (40 * i), 238, 32, 32);		//å†è¡¨ç¤º
+					wait = false;				//æœç‰©ã®çŠ¶æ…‹ã‚’ç„¡åŠ¹
+					fruits[i].state = OFF;		//æœç‰©ã®çŠ¶æ…‹ã‚’OFF
 				}
-				//•‚¢‰Ê•¨‚Æˆá‚¤‚Ìˆ—
-				if (neko.state == Normal && neko.HIT.Hit(mousePos) && check == false)		//‰Ê•¨‚Ìó‘Ô‚ªON‚ÌA’Êíó‘Ô‚Ì”L‚É“–‚½‚éA‚©‚Â•‚¢‰Ê•¨‚Æ“¯‚¶‚Å‚È‚¢
+				//é»’ã„æœç‰©ã¨é•ã†æ™‚ã®å‡¦ç†
+				if (neko.state == Normal && neko.HIT.Hit(mousePos) && check == false)		//æœç‰©ã®çŠ¶æ…‹ãŒONã®æ™‚ã€é€šå¸¸çŠ¶æ…‹ã®çŒ«ã«å½“ãŸã‚‹ã€ã‹ã¤é»’ã„æœç‰©ã¨åŒã˜ã§ãªã„
 				{
-					neko.state = bad;			//”L‚Ìó‘Ô‚ğbad‚É‚·‚é
-					PlaySound("./data/SE/005 Ï§§§§§§c.wav", NULL, SND_FILENAME | SND_ASYNC);		//SE‚ğÄ¶
+					neko.state = bad;			//çŒ«ã®çŠ¶æ…‹ã‚’badã«ã™ã‚‹
+					PlaySound("./data/SE/cat2.wav", NULL, SND_FILENAME | SND_ASYNC);		//SEã‚’å†ç”Ÿ
 					score -= 1;
 					fruits[i].hit = ML::Box2D(0 + (40 * i), 238, 32, 32);
-					wait = false;				//‰Ê•¨‚Ìó‘Ô‚ğ–³Œø
-					fruits[i].state = OFF;		//‰Ê•¨‚Ìó‘Ô‚ğOFF
+					wait = false;				//æœç‰©ã®çŠ¶æ…‹ã‚’ç„¡åŠ¹
+					fruits[i].state = OFF;		//æœç‰©ã®çŠ¶æ…‹ã‚’OFF
 				}
 			}
 
-			if (mouse.LB.off)				//ƒ}ƒEƒX‚Ì¶ƒ{ƒ^ƒ“‚ª—£‚³‚ê‚½‚ç
+			if (mouse.LB.off)				//ãƒã‚¦ã‚¹ã®å·¦ãƒœã‚¿ãƒ³ãŒé›¢ã•ã‚ŒãŸã‚‰
 			{
-				wait = false;				//‰Ê•¨‚Ìó‘Ô‚ğ–³Œø
-				fruits[i].state = OFF;		//‰Ê•¨‚Ìó‘Ô‚ğOFF
+				wait = false;				//æœç‰©ã®çŠ¶æ…‹ã‚’ç„¡åŠ¹
+				fruits[i].state = OFF;		//æœç‰©ã®çŠ¶æ…‹ã‚’OFF
 
-				if (fruits[i].state == OFF)	//‰Ê•¨‚Ìó‘Ô‚ªOFF‚È‚ç
+				if (fruits[i].state == OFF)	//æœç‰©ã®çŠ¶æ…‹ãŒOFFãªã‚‰
 				{
-					fruits[i].hit = ML::Box2D(0 + (40 * i), 238, 32, 32);					//‰ŠúÀ•W‚É–ß‚·
+					fruits[i].hit = ML::Box2D(0 + (40 * i), 238, 32, 32);					//åˆæœŸåº§æ¨™ã«æˆ»ã™
 				}
 			}
 		}
 }
 //-----------------------------------------------------------------------------
-//•`‰æˆ—
-//‹@”\ŠT—vFƒQ[ƒ€‚Ì‚PƒtƒŒ[ƒ€‚É“–‚½‚é•\¦ˆ— ‚Q‚c
+//æç”»å‡¦ç†
+//æ©Ÿèƒ½æ¦‚è¦ï¼šã‚²ãƒ¼ãƒ ã®ï¼‘ãƒ•ãƒ¬ãƒ¼ãƒ ã«å½“ãŸã‚‹è¡¨ç¤ºå‡¦ç† ï¼’ï¼¤
 //-----------------------------------------------------------------------------
 void  MyGameMain_Render2D()
 {
-	//”wŒi‚Ì•`‰æ
+	//èƒŒæ™¯ã®æç”»
 
 	DG::Image_Draw("back", bc.BACK,SRC_BACK);
-	//”L‚ÌŒ³‰æ‘œ
+	//çŒ«ã®å…ƒç”»åƒ
 		ML::Box2D  src(0, 0, 48, 48);
-	//”L‚Ì•`‰æ
+	//çŒ«ã®æç”»
 	if (neko.state == Normal)
 	{
 		DG::Image_Draw("neko", neko.HIT, src);
-		//1ŒÂ‚¾‚¯•‚¢‰Ê•¨‚Ì•`‰æ
+		//1å€‹ã ã‘é»’ã„æœç‰©ã®æç”»
 		switch (ran)
 		{
 		case 0:
@@ -255,51 +255,51 @@ void  MyGameMain_Render2D()
 	}
 		
 
-	//”L2‚Ì•`‰æ
+	//çŒ«2ã®æç”»
 	if (neko.state == nyaa && check == true)
 	{
 		DG::Image_Draw("neko2", neko.HIT, src);
-		ran = rand() % (3 + 1);		//V‚µ‚¢—”‚ğ—pˆÓ(‰æ‘œ‚Ì•ÏX)
+		ran = rand() % (3 + 1);		//æ–°ã—ã„ä¹±æ•°ã‚’ç”¨æ„(ç”»åƒã®å¤‰æ›´)
 		for (int i = 0; i < 4; ++i)
 		{
-			//•`‰æŠÔ--------------------------------
+			//æç”»æ™‚é–“--------------------------------
 			if (pause >= 0)
 			{
-				fruits[i].hit = ML::Box2D(0, 0, 0, 0);		//‚µ‚Î‚ç‚­‰Ê•¨‚ğÁ‚·
+				fruits[i].hit = ML::Box2D(0, 0, 0, 0);		//ã—ã°ã‚‰ãæœç‰©ã‚’æ¶ˆã™
 				--pause;
 			}
 			else
 			{
 				pause = 150;
-				neko.state = Normal;		//150ƒtƒŒ[ƒ€Œã‚ÉNormal
+				neko.state = Normal;		//150ãƒ•ãƒ¬ãƒ¼ãƒ å¾Œã«Normal
 			}
 			//---------------------------------------
 		}
 	}
-	//”L3‚Ì•`‰æ
+	//çŒ«3ã®æç”»
 	if (neko.state == bad && check == false)
 	{
 		DG::Image_Draw("neko3", neko.HIT, src);
-		ran = rand() % (3 + 1);		//V‚µ‚¢—”‚ğ—pˆÓ(‰æ‘œ‚Ì•ÏX)
+		ran = rand() % (3 + 1);		//æ–°ã—ã„ä¹±æ•°ã‚’ç”¨æ„(ç”»åƒã®å¤‰æ›´)
 		for (int i = 0; i < 4; ++i)
 		{
-			//•`‰æŠÔ--------------------------------
+			//æç”»æ™‚é–“--------------------------------
 			if (pause >= 0)
 			{
-				fruits[i].hit = ML::Box2D(0, 0, 0, 0);		//‚µ‚Î‚ç‚­‰Ê•¨‚ğÁ‚·
+				fruits[i].hit = ML::Box2D(0, 0, 0, 0);		//ã—ã°ã‚‰ãæœç‰©ã‚’æ¶ˆã™
 				--pause;
 			}
 			else
 			{
 				pause = 150;
-				neko.state = Normal;		//150ƒtƒŒ[ƒ€Œã‚ÉNormal
+				neko.state = Normal;		//150ãƒ•ãƒ¬ãƒ¼ãƒ å¾Œã«Normal
 			}
 			//---------------------------------------
 		}	
 	}
 	
 		
-	//‰Ê•¨‚Ì•`‰æ
+	//æœç‰©ã®æç”»
 	for (int i = 0; i < 4; ++i)
 		switch (i)
 		{
@@ -317,34 +317,34 @@ void  MyGameMain_Render2D()
 			break;
 		}
 
-	//“¾“_‚Ì•\¦
+	//å¾—ç‚¹ã®è¡¨ç¤º
 	ML::Box2D textBox(0, 0, 480, 32);
-	string text = "“¾“_:" + to_string(score);
+	string text = "å¾—ç‚¹:" + to_string(score);
 	DG::Font_Draw("FontA",textBox, text, ML::Color(0.8f, 0.5, 0.0, 1.0f));
 
-	if (score <= -5)		//ƒXƒRƒA‚ª-5‚Åm9(^„D^)Ìß·Ş¬°
+	if (score <= -5)		//ã‚¹ã‚³ã‚¢ãŒ-5ã§m9(^Ğ”^)ï¾Œï¾Ÿï½·ï¾ï½¬ï½°
 	{
 		ML::Box2D src(0, 0, 480, 270);
 		ML::Box2D draw(0, 0, 480, 270);
-		DG::Image_Draw("m9(^„D^)Ìß·Ş¬°",draw,src);
+		DG::Image_Draw("m9(^Ğ”^)ï¾Œï¾Ÿï½·ï¾ï½¬ï½°",draw,src);
 	}
-	if (score >= 5)			//ƒXƒRƒA‚ª5‚Å‚½‚¯‚µ
+	if (score >= 5)			//ã‚¹ã‚³ã‚¢ãŒ5ã§ãŸã‘ã—
 	{
 		if (erai >= 0)
 		{
-			//300ƒtƒŒ[ƒ€ŠÔ•`‰æ-------------------
+			//300ãƒ•ãƒ¬ãƒ¼ãƒ é–“æç”»-------------------
 			ML::Box2D src(0, 0, 574, 279);
 			ML::Box2D draw(0, 0, 480, 270);
-			DG::Image_Draw("‚¦‚ç‚¢‚Á", draw, src);
+			DG::Image_Draw("ãˆã‚‰ã„ã£", draw, src);
 			--erai;
 			//-----------------------------------
 		}
 		if (erai <= 0)
 		{
-			//300ƒtƒŒ[ƒ€Œã-----------------------
+			//300ãƒ•ãƒ¬ãƒ¼ãƒ å¾Œ-----------------------
 			ML::Box2D src(0, 0, 574, 279);
 			ML::Box2D draw(0, 0, 480, 270);
-			DG::Image_Draw("Š®", draw, src);
+			DG::Image_Draw("å®Œ", draw, src);
 			//-----------------------------------
 		}
 		
